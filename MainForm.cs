@@ -18,11 +18,17 @@ namespace Nimride
 
         int nonameCount = 1;
 
+
+        List<BuildResultEntry> buildResult = new List<BuildResultEntry>();
+
         public MainForm()
         {
             InitializeComponent();
 
             tabControl1.TabPages.Clear();
+
+            buildOutput.ItemHeight = (int)(Icons.Error.Height * 1.2);
+
             CreateDocument();
         }
 
@@ -216,23 +222,23 @@ namespace Nimride
 
         private void syntaxCheckToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            buildOutput.Items.Clear();
 
-            messageConsole.Clear();
-            string fn;
+            string fn, output;
             if (!GetCurrentFile(out fn, true))
                 return;
 
-
-
-            systemExec("nimrod", false,"c","-c",fn);
+            systemExec("nimrod", false, out output, "c", "-c", fn);
         }
 
 
         bool BuildCurrentFile(out string exeresult)
         {
-            messageConsole.Clear();
+            buildResult.Clear();
+            UpdateBuildResultList();
 
             exeresult = null;
+            string output = null;
 
             string srcfile;
             if (!GetCurrentFile(out srcfile, true))
@@ -240,7 +246,23 @@ namespace Nimride
 
             exeresult=Path.ChangeExtension(srcfile,".exe");
 
-            return systemExec("nimrod",false, "c", "--out:"+exeresult,srcfile) == 0;
+            bool res=systemExec("nimrod",false,out output, "c", "--out:"+exeresult,srcfile) == 0;
+
+
+            if (output != null)
+            {
+                string[] lines = output.Split(new char[] { '\r', '\n' },StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string lin in lines)
+                {
+                    buildResult.Add(new BuildResultEntry(lin));
+                }
+            }
+
+            UpdateBuildResultList();
+
+
+            return res;
         }
 
        
@@ -265,8 +287,11 @@ namespace Nimride
 
         }
 
-        private int systemExec(string exefile,bool shell, params string[] args)
+        private int systemExec(string exefile,bool shell, out string output,params string[] args)
         {
+
+            output = null;
+
             List<string> quoteFixed=new List<string>();
             foreach (string str in args)
                 quoteFixed.Add(QuoteIfWhities(str));
@@ -278,7 +303,7 @@ namespace Nimride
             cmd.StartInfo.UseShellExecute = shell;
             cmd.StartInfo.CreateNoWindow = true;
             cmd.StartInfo.RedirectStandardOutput = !shell;
-            cmd.StartInfo.RedirectStandardError = !shell;
+            //cmd.StartInfo.RedirectStandardError = !shell;
 
             cmd.Start();
 
@@ -286,23 +311,14 @@ namespace Nimride
 
             if (!shell)
             {
-                messageConsole.AppendText(cmd.StandardOutput.ReadToEnd());
-                messageConsole.AppendText(cmd.StandardError.ReadToEnd());
+                output = cmd.StandardOutput.ReadToEnd();
+                //messageConsole.AppendText(cmd.StandardError.ReadToEnd());
             }
 
             return cmd.ExitCode;
         }
 
-        void cmd_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            messageConsole.Invoke((MethodInvoker)delegate
-            {
-                messageConsole.AppendText(e.Data);
-            });
-        }
-
       
-
 
 
         /// <summary>
@@ -391,10 +407,11 @@ namespace Nimride
         private void debugCurrentFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string exefile;
+            string output = null;
 
             if (BuildCurrentFile(out exefile))
             {
-                systemExec(exefile,true);
+                systemExec(exefile,true,out output);
             }
         }
 
@@ -455,6 +472,66 @@ namespace Nimride
         private void closeAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CloseAllFiles();
-        }  
+        }
+
+       
+
+        private void buildOutput_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            int idx = e.Index;
+            if (idx >= 0)
+            {
+                BuildResultEntry bre = buildOutput.Items[idx] as BuildResultEntry;
+                if (bre != null)
+                {
+                    bre.Draw(e);
+                }
+            }
+        }
+
+
+        void UpdateBuildResultList()
+        {
+
+            buildOutput.Items.Clear();
+
+            BuildResultEntryType addMask = BuildResultEntryType.None;
+            if (errorMask.Checked) addMask |= BuildResultEntryType.Error;
+            if (hintMask.Checked) addMask |= BuildResultEntryType.Hint;
+            if (warningMask.Checked) addMask |= BuildResultEntryType.Warning;
+            if (messageMask.Checked) addMask |= BuildResultEntryType.Message;
+
+
+            int errors = 0, hints = 0, warnings = 0, messages = 0;
+
+            foreach (BuildResultEntry bre in buildResult)
+            {
+                
+                if( (bre.Type & addMask)!=0)
+                    buildOutput.Items.Add(bre);
+
+                switch(bre.Type) {
+                    case BuildResultEntryType.Error: errors++;break;
+                    case BuildResultEntryType.Warning: warnings++; break;
+                    case BuildResultEntryType.Hint: hints++; break;
+                    default: messages++; break;
+                }
+            }
+
+            errorMask.Text = errors.ToString(CultureInfo.InvariantCulture) + " Errors";
+            warningMask.Text = warnings.ToString(CultureInfo.InvariantCulture) + " Warnings";
+            hintMask.Text = hints.ToString(CultureInfo.InvariantCulture) + " Hints";
+            messageMask.Text = messages.ToString(CultureInfo.InvariantCulture) + " Messages";
+        }
+        
+        private void maskCheckedChanged(object sender, EventArgs e)
+        {
+            UpdateBuildResultList();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
