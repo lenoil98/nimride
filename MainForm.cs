@@ -13,12 +13,12 @@ using System.Windows.Forms;
 
 namespace Nimride
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
 
         int nonameCount = 1;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
