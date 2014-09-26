@@ -10,6 +10,9 @@ using System.Text.RegularExpressions;
 namespace Nimride
 {
 
+
+
+
     public delegate void ModifiedDelegate(object sender,EventArgs args);
 
     public class NimEditor:FastColoredTextBox
