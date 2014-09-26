@@ -26,6 +26,8 @@ namespace Nimride
             CreateDocument();
         }
 
+
+
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CreateDocument();
