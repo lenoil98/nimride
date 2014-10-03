@@ -64,6 +64,7 @@
             this.hintMask = new System.Windows.Forms.CheckBox();
             this.warningMask = new System.Windows.Forms.CheckBox();
             this.errorMask = new System.Windows.Forms.CheckBox();
+            this.saveAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -91,6 +92,7 @@
             this.newToolStripMenuItem,
             this.openToolStripMenuItem,
             this.saveToolStripMenuItem,
+            this.saveAllMenuItem,
             this.saveAsToolStripMenuItem,
             this.toolStripMenuItem1,
             this.closeToolStripMenuItem,
@@ -404,6 +406,13 @@
             this.errorMask.UseVisualStyleBackColor = true;
             this.errorMask.CheckedChanged += new System.EventHandler(this.maskCheckedChanged);
             // 
+            // saveAllMenuItem
+            // 
+            this.saveAllMenuItem.Name = "saveAllMenuItem";
+            this.saveAllMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.saveAllMenuItem.Text = "Save all";
+            this.saveAllMenuItem.Click += new System.EventHandler(this.saveAllMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -471,6 +480,7 @@
         private System.Windows.Forms.CheckBox hintMask;
         private System.Windows.Forms.CheckBox warningMask;
         private System.Windows.Forms.CheckBox errorMask;
+        private System.Windows.Forms.ToolStripMenuItem saveAllMenuItem;
     }
 }
 

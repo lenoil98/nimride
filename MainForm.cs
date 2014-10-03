@@ -1,4 +1,5 @@
 ﻿using FastColoredTextBoxNS;
+using Nimride.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -87,7 +88,9 @@ namespace Nimride
 
         void se_ModifiedChanged(object sender, EventArgs args)
         {
-            UpdateTabText(tabControl1.SelectedTab);
+            TabPage tp=FindTabPage(sender as NimEditor);
+            if(tp!=null)
+                UpdateTabText(tp);
         }
 
 
@@ -126,7 +129,7 @@ namespace Nimride
             //try to use the directory of the current file
             openDialog.FileName = "";
             var ed = CurrentEditor;
-            if (!string.IsNullOrWhiteSpace(ed.FileName))
+            if (ed!=null && !string.IsNullOrWhiteSpace(ed.FileName))
             {
                 openDialog.InitialDirectory = Path.GetDirectoryName(ed.FileName);
             }
@@ -409,6 +412,13 @@ namespace Nimride
             string exefile;
             string output = null;
 
+            if (Settings.Default.SaveFilesBeforeBuild)
+            {
+                if (!SaveAllFiles())
+                    return;
+            }
+
+
             if (BuildCurrentFile(out exefile))
             {
                 systemExec(exefile,true,out output);
@@ -532,6 +542,26 @@ namespace Nimride
         private void MainForm_Load(object sender, EventArgs e)
         {
 
+        }
+
+
+
+        bool SaveAllFiles()
+        {
+
+            foreach (NimEditor ed in AllEditors)
+            {
+                if (!Save(ed)) 
+                    return false;
+                
+            }
+
+            return true;
+        }
+
+        private void saveAllMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveAllFiles();
         }
     }
 }
